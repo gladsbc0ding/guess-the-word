@@ -24,24 +24,38 @@ const message = document.querySelector(".message");
 const playAgainButton = document.querySelector(".play-again");
 
 //starting word to test
-const word = "magnolia";
+let word = "magnolia";
 
 // create empty array for all letters guessed by player
 const guessedLetters = [];
+
+// Create variable for number of guessesRemaining
+let remainingGuesses = 8;
+
+// Add an async function to fetch data
+const getWord = async function () {
+  const response = await fetch("https://gist.githubusercontent.com/skillcrush-curriculum/7061f1d4d3d5bfe47efbfbcfe42bf57e/raw/5ffc447694486e7dea686f34a6c085ae371b43fe/words.txt");
+  const words = await response.text();
+  const wordArray = words.split("\n"); //transform fetched data into array
+  //console.log(wordArray);
+  // Grab random word
+  const randomIndex = Math.floor(Math.random() * wordArray.length);
+  word = wordArray[randomIndex].trim(); // removes whitespace before/after word
+  placeholder(word);
+} ;
+getWord();
 
 // Create function to add placeholders for each letter of word
 //Use array then join it back to a string using .join("") method
 const placeholder = function (word) {
   const placeholderLetters = [];
   for (const letter of word) {
-    console.log(letter);
+    //console.log(letter);
     placeholderLetters.push("☀️");
-    placeholderLetters.push("●");
+    //placeholderLetters.push("●");
   }
   wordInProgress.innerText = placeholderLetters.join("");
 };
-
-placeholder(word);
 
 // Add event listener to button
 guessButton.addEventListener("click", function (e) {
@@ -77,6 +91,7 @@ const makeGuess = function (guess) {
   } else {
     guessedLetters.push(guess);
     console.log(guessedLetters);
+    updateGuessesRemaining(guess);
     showGuessedLetters();
     updateWordInProgress(guessedLetters);
   }
@@ -102,14 +117,33 @@ const updateWordInProgress = function (guessedLetters) {
       revealWord.push(letter.toUpperCase());
     } else {
       revealWord.push ("☀️");
-      revealWord.push("●");
+      //revealWord.push("●");
     }
   }
   wordInProgress.innerText = revealWord.join("");
   checkPlayerWon();
 };
 
-// Create a function to check if the player wordInProgress
+// Create a function to count the guesses remaniningGuesses
+const updateGuessesRemaining = function (guess) {
+  const upperWord = word.toUpperCase();
+  if (!upperWord.includes(guess)) {
+    message.innerText = `Sorry, ${guess} is not in the word.`;
+    remainingGuesses -= 1;
+  } else {
+    message.innerText = `Yay! ${guess} is in the word.`;
+  }
+  if (remainingGuesses === 0) {
+    message.innerHTML = `Sorry, game over. The word was <span class="highlight">${word}</span>.`;
+    guessesRemainingSpan.innerText = " 0 guesses";
+  } else if (remainingGuesses === 1) {
+    guessesRemainingSpan.innerText = `${remainingGuesses} guess`;
+  } else {
+    guessesRemainingSpan.innerText = `${remainingGuesses} guesses`;
+  }
+};
+
+// Create a function to check if the player won
 const checkPlayerWon = function () {
   if (word.toUpperCase() === wordInProgress.innerText) {
     message.classList.add("win");
